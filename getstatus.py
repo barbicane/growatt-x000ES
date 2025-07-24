@@ -5,7 +5,7 @@ import datetime
 import os
 import sys
 from pymodbus.exceptions import ModbusIOException
-from pymodbus.client.sync import ModbusSerialClient as ModbusClient
+from pymodbus.client import ModbusSerialClient as ModbusClient
 from influxdb import InfluxDBClient
 
 influxhost = "127.0.0.1"
@@ -15,7 +15,7 @@ influxuser = "None"
 influxpass = "None"
 influxmeasurement = "inverter"
 
-interval = 60
+interval = 5
 
 numinverters = 1
 inverterusbport1 = "/dev/ttyUSB0"
@@ -56,14 +56,14 @@ class Growatt:
         self.name = name
         self.unit = unit
 
-        row = self.client.read_holding_registers(73, unit=self.unit)
+        row = self.client.read_holding_registers(73, count=1)
         if type(row) is ModbusIOException:
             if gwverbose: print("GWVERBOSE1",row)
             raise row
         self.modbusVersion = row.registers[0]
 
     def read(self):
-        row = self.client.read_input_registers(0, 83, unit=self.unit)
+        row = self.client.read_input_registers(0, 83, count=83)
         if gwverbose: print("GWVERBOSE2")
         if gwverbose: print("GWVERBOSE3")
         info = {                                    # ==================================================================
@@ -177,7 +177,7 @@ else:
 
 print("Connecting to Inverter..", end="")
 try:
-  client = ModbusClient(method='rtu', port=inverterusbport1, baudrate=9600, stopbits=1, parity='N', bytesize=8, timeout=1)
+  client = ModbusClient(framer='rtu', port=inverterusbport1, baudrate=9600, stopbits=1, parity='N', bytesize=8, timeout=1)
   client.connect()
 except:
   print("Failed")
